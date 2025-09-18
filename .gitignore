@@ -1,0 +1,5 @@
+firedrake/
+petsc/
+firedrake-configure
+*.pvd
+*.vtu
