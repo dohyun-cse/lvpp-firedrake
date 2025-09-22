@@ -29,14 +29,15 @@ u_k, psi_k = sol_k.subfunctions
 mapped_uh = Function(latent_space)
 
 # Fenchel conjugate (R^*) and mirror map (\nabla R^*)
-conj_R = ufl.sqrt(1.0 + dot(psi, psi))
+mirror_map = psi / ufl.sqrt(1.0 + dot(psi, psi))
 
+v, phi = TestFunctions(V)
 # Define the saddle-point Lagrangian
 alpha = Constant(1.0) # Prox step size
-J = -u
-prox_diff = (div(psi) - div(psi_k))*u 
-L = (alpha*J + prox_diff - conj_R)*dx
-dL = derivative(L, sol)
+A = -v
+prox_diff = (div(psi) - div(psi_k))*v 
+consistency = (u*div(phi) - dot(mirror_map, phi))
+F = (alpha*A + prox_diff + consistency)*dx
 
 # Plotting setup
 fig = plt.figure()
@@ -47,7 +48,7 @@ for i in range(1, 101):
     for attempt in range(10):
         print(f'Iteration {i:3d}, alpha = {alpha.values()[0]:.2e}', end='')
         try:
-            solve(dL == 0, sol, bcs=[bc],
+            solve(F == 0, sol, bcs=[bc],
                   solver_parameters={"snes_rtol": 0.0, "snes_atol": 1e-8})
             break
         except ConvergenceError:
