@@ -2,4 +2,5 @@ firedrake/
 petsc/
 firedrake-configure
 *.pvd
+*.pvtu
 *.vtu
