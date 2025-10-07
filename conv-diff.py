@@ -14,14 +14,15 @@ if __name__ == "__main__":
 
     # Obstacle
     x, y = SpatialCoordinate(mesh)
-    obstacle = ufl.sqrt(ufl.max_value(0.25**2 - (x-0.5)**2 - (y-0.5)**2, 0.0))
+    obstacle = sqrt(max_value(0.25**2 - (x-0.5)**2 - (y-0.5)**2, 0.0))
+    b = Constant((0.5, 0.0))
 
     # Define function spaces
     V = FunctionSpace(mesh, "CG", order + 1)
     W = FunctionSpace(mesh, "DG", order - 1)
     spaces = V * W
     # energy, constraint operator, and mirror map
-    dE = lambda u, v: inner(grad(u), grad(v))*dx
+    dE = lambda u, v: inner(grad(u), grad(v))*dx - inner(b*u, grad(v))*dx
     B = lambda u, phi: u*phi*dx # B=Id
     mirror_map = lambda psi: ufl.exp(psi) + obstacle # C = [0, inf)
     # Define the essential boundary condition

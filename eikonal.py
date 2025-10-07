@@ -17,13 +17,13 @@ if __name__ == "__main__":
     obstacle = ufl.sqrt(ufl.max_value(0.25**2 - (x-0.5)**2 - (y-0.5)**2, 0.0))
 
     # Define function spaces
-    V = FunctionSpace(mesh, "CG", order + 1)
-    W = FunctionSpace(mesh, "DG", order - 1)
+    V = FunctionSpace(mesh, "DG", order)
+    W = FunctionSpace(mesh, "RT", order + 1)
     spaces = V * W
     # energy, constraint operator, and mirror map
-    dE = lambda u, v: inner(grad(u), grad(v))*dx
-    B = lambda u, phi: u*phi*dx # B=Id
-    mirror_map = lambda psi: ufl.exp(psi) + obstacle # C = [0, inf)
+    dE = lambda u, v: -v*dx
+    B = lambda u, phi: -u*div(phi)*dx # B=Id
+    mirror_map = lambda psi: psi / sqrt(1 + inner(psi, psi))
     # Define the essential boundary condition
     bc = DirichletBC(spaces[0], 0.0, "on_boundary") # u = 0 on the boundary
 
@@ -44,6 +44,7 @@ if __name__ == "__main__":
     alpha_k = Constant(1.0)
     F = pg_residual(dE, B, mirror_map, psi_k, alpha_k, u, v, psi, w)
     for prox_it in range(1, prox_max_it):
+        alpha_k.assign(prox_it)
         sol_k.assign(sol)
         solve(F == 0, sol, bcs=[bc],
               solver_parameters={"snes_rtol": 0.0, "snes_atol": 1e-8})
